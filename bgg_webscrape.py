@@ -5,13 +5,13 @@ import time
 
 class Webscraper:
 
-    def __init__(self): # setup webdriver and info_list which will contain game info from selected game category
+    def __init__(self): # setup webdriver and info_list which will contain game info from selected game category. Ask user for game category.
         self.info_list = []
         self.category = input("Please enter board game category. Ensure first letter of all words is capitalised: ")
         self.driver = webdriver.Chrome()
 
     
-    def open_website(self): # open website, accept cookies and ask user for game category
+    def open_website(self): # open website and accept cookies
         URL = "https://boardgamegeek.com/browse/boardgamecategory"
         self.driver.get(URL)
         time.sleep(2)
