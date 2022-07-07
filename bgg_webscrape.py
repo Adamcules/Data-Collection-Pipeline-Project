@@ -19,20 +19,6 @@ def open_website(): #open website and accept cookies
     return driver
 
 driver = open_website()
-driver
-
-# def goto_categories(): #goto board game categories section of website
-#     time.sleep(2)
-#     browse_button = driver.find_element(By.XPATH, '/html/body/gg-app/div/gg-header/header/nav/div/div[1]/div/div[1]/ul/li[1]/button')
-#     browse_button.click()
-#     time.sleep(2)
-#     categories_atag = driver.find_element(By.XPATH, '/html/body/gg-app/div/gg-header/header/nav/div/div[1]/div/div[1]/ul/li[1]/div/div/div/div[1]/span[2]/a')
-#     link = categories_atag.get_attribute('href')
-#     driver.get(link)
-
-#     return driver
-
-# goto_categories()
 
 def select_category(category): # select inputted category
     category = category
@@ -44,7 +30,7 @@ def select_category(category): # select inputted category
 
 select_category(category)
 
-def game_links():
+def game_links(): # get links to top 6 games for selected category
     time.sleep(2)
     game_container = driver.find_element(By.XPATH, '//*[@class="rec-grid-overview"]') # element containing 6 top games
     game_list = game_container.find_elements(By.XPATH, './li') # list of games on page
@@ -60,7 +46,7 @@ def game_links():
 game_links()
 
 links = game_links()
-info_list = []
+info_list = [] 
 
 def get_info():
     info_dict = {'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': ""}
