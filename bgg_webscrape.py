@@ -1,6 +1,8 @@
-from ast import Break
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 import time
 
 class Webscraper:
@@ -14,26 +16,28 @@ class Webscraper:
     def open_website(self): # open website and accept cookies
         URL = "https://boardgamegeek.com/browse/boardgamecategory"
         self.driver.get(URL)
-        time.sleep(2)
-        
+        time.sleep(1)
+        delay = 4
+
         try:
-            cookies_button = self.driver.find_element(By.XPATH, '//*[@id="c-p-bn"]')
+            cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, '//*[@id="c-p-bn"]')))
             cookies_button.click()
-        except:
+        except TimeoutException:
             pass
         self.select_category(self.category)
 
 
     def select_category(self, category): # make driver click inputted game category
-        time.sleep(2)
+        time.sleep(1)
+        delay = 4
+        
         try:   
-            link = self.driver.find_element(By.LINK_TEXT, f"{category}")
+            link = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.LINK_TEXT, f"{category}")))
             link.click()
             self.iterate_games()
-        except:
+        except TimeoutException:
             print ("Input does not match an available category. Please run file again")
-            self.driver.quit()
-            Break       
+            self.driver.quit()     
 
 
     def game_links(self): # get links to top 6 games for selected category
@@ -49,7 +53,7 @@ class Webscraper:
         return link_list
 
     
-    def get_info(self): # get desired info from current game page and store in dictionary
+    def get_game_info(self): # get desired info from current game page and store in dictionary
         info_dict = {'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': ""}
         name = self.driver.find_element(By.XPATH, '//div[@class="game-header-title-info"]/h1/a').text
         info_dict['Name'] = (name)
@@ -80,7 +84,7 @@ class Webscraper:
         links = self.game_links()
         for hyper in links:
             self.driver.get(hyper)
-            self.info_list.append(self.get_info())
+            self.info_list.append(self.get_game_info())
             time.sleep(2)
         self.info_list = sorted(self.info_list, key=lambda k: k['Rating'], reverse = True) # sort games by rating value, highest first
         print (self.info_list)
@@ -90,7 +94,3 @@ class Webscraper:
 if __name__ == "__main__":
     scrape = Webscraper()
     scrape.open_website()
-
-
-    
-
