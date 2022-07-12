@@ -7,7 +7,7 @@ import time
 
 class Webscraper:
 
-    def __init__(self): # setup webdriver and info_list which will contain game info from selected game category. Ask user for game category.
+    def __init__(self): # setup webdriver and info_list which will contain game data from top 6 games of user selected category. ask user to input category.
         self.info_list = []
         self.category = input("Please enter board game category. Ensure first letter of all words is capitalised: ")
         self.driver = webdriver.Chrome()
@@ -52,31 +52,58 @@ class Webscraper:
 
         return link_list
 
-    
+
     def get_game_info(self): # get desired info from current game page and store in dictionary
-        info_dict = {'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': ""}
+        info_dict = {'BGG_ID': "", 'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': "", 'Image': ""}
+        # get bgg game id info:
+        bgg_id_text = self.driver.find_element(By.XPATH, '//div[@class="game-itemid ng-binding"]').text
+        # extract number (int) from id text:
+        bgg_id = int(''.join(filter(str.isdigit, bgg_id_text)))
+        # add id to dictionary:
+        info_dict['BGG_ID'] = bgg_id
+        # get game name:
         name = self.driver.find_element(By.XPATH, '//div[@class="game-header-title-info"]/h1/a').text
-        info_dict['Name'] = (name)
+        # add name to dictionary:
+        info_dict['Name'] = name
+        # get year published:    
         year = self.driver.find_element(By.XPATH, '//div[@class="game-header-title-info"]/h1/span').text
-        info_dict['Year'] = (year)
+        # add year to dictionary: 
+        info_dict['Year'] = year
+        # switch to 'ratings' tab:
         ratings_tab = self.driver.find_element(By.XPATH, '//*[@id="primary_tabs"]/ul/li[2]')
         ratings_tab.click()
+        # get game rating:
         rating = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/div/ui-view/ui-view/div/ratings-module/div/div[2]/div[1]/div[1]/div[2]/div[1]/div[2]/ul/li[1]/div[2]').text
-        info_dict['Rating'] = (rating)
+        # add rating to dictionary:
+        info_dict['Rating'] = rating
+        # get 'player from' info:
         player_from = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[1]').text
+        # get 'player to' info (not all games have this element, thus use of 'try' function): 
         try:
             player_to = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[2]').text
         except:
             player_to = ""
+        # calculate game number of players. 'From-To' format:
         num_players = player_from + player_to
-        info_dict['Number of Players'] = (num_players)
+        # add num_players to dictionary:
+        info_dict['Number of Players'] = num_players
+        # get game age rating:
         age = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[3]/div[1]/span').text
-        info_dict['Age'] = (age)
+        # add age to dictionary:
+        info_dict['Age'] = age
+        # switch to 'stats' tab:
         stats_tab = self.driver.find_element(By.XPATH, '//*[@id="primary_tabs"]/ul/li[7]')
         stats_tab.click()
+        # get 'wanted by' info (number of people expressing wish to get game):
         wanted_by = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/div/ui-view/ui-view/div/div/div[2]/div/div[3]/div[2]/div[2]/ul/li[5]/div[2]/a').text
-        info_dict['Wanted By'] = (wanted_by)
-
+        # add wanted_by to dictionary:
+        info_dict['Wanted By'] = wanted_by
+        # get game image link:
+        image_xpath = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[1]/ng-include/div/a[1]/img')
+        image_src = image_xpath.get_attribute("src")
+        # add image to dictionary:
+        info_dict['Image'] = image_src
+        
         return info_dict
 
     def iterate_games(self): # open game pages and append game info to info_list. quit driver when complete. 
@@ -84,7 +111,7 @@ class Webscraper:
         links = self.game_links()
         for hyper in links:
             self.driver.get(hyper)
-            self.info_list.append(self.get_game_info())
+            self.info_list.append(self.get_game_info())            
             time.sleep(2)
         self.info_list = sorted(self.info_list, key=lambda k: k['Rating'], reverse = True) # sort games by rating value, highest first
         print (self.info_list)
