@@ -13,6 +13,20 @@ Code asks user for a particular category of board game and is returned info as a
 
 ![Adventure Game Info](https://user-images.githubusercontent.com/106440366/178328806-115d4dcf-da1b-4333-b532-e3a13b0d4151.JPG)
 
+## Milestone 3
+Added method to collect game ID for each game as given by BGG (named BGG_ID). Used 'filter' function to extract the number only part of the game id from the web element text string.
+
+Within the iterate_games method, added a UUID key to the game dictionary (info_dict) and generated a v4 UUID for each game within this method using the imported uuid module:
+
+![UUID generation](https://user-images.githubusercontent.com/106440366/179084356-e5ef3c22-fa93-42ff-95a4-a85616e92162.JPG)
+
+As such each game has two unique identification tags.
+
+The dictionaries are stored locally as JSON files within a unique folder for each game (folder has name set to  game BGG_ID) and all within a parent folder called 'raw_data'. This is achieved by the method 'save_dict_records' and makes use of functionality from the imported os and json modules (e.g. 'os.mkdir' and 'json.dump' functions).
+
+The game image files are downloaded and stored locally as jpeg files within an 'images' folder within the 'raw_data' folder. Each image has name set to game BGG_ID. The urllib module is imported for this purpose and the 'urllib.request.urlretrieve' function used.
+
+
 
 
 Example text below
