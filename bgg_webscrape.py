@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+import urllib.request
 import time
 import uuid
 import os
@@ -29,7 +30,7 @@ class Webscraper:
         self.select_category(self.category)
 
 
-    def select_category(self, category): # make driver click inputted game category
+    def select_category(self, category): # make driver click link to inputted game category
         time.sleep(1)
         delay = 4
         try:   
@@ -53,7 +54,7 @@ class Webscraper:
         
     def get_id(self): # get bgg game id info
         bgg_id_text = self.driver.find_element(By.XPATH, '//div[@class="game-itemid ng-binding"]').text
-        bgg_id = ''.join(filter(str.isdigit, bgg_id_text))  # extract number (int) from id text
+        bgg_id = ''.join(filter(str.isdigit, bgg_id_text))  # extract number only from id text
         return bgg_id
 
         
@@ -96,13 +97,13 @@ class Webscraper:
         return wanted_by
 
         
-    def get_image(self): # get game image link    
+    def get_image(self): # get game image url   
         image_xpath = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[1]/ng-include/div/a[1]/img')
         image_src = image_xpath.get_attribute("src")
         return image_src
         
 
-    def iterate_games(self): # open game pages and append game info to info_list. quit driver when complete. 
+    def iterate_games(self): # open game pages, create dictionary of info for each game and append dictionaries to info_list. quit driver when complete. 
         time.sleep(2)
         links = self.game_links()
         for hyper in links:
@@ -118,7 +119,7 @@ class Webscraper:
             info_dict['Wanted By'] = self.get_wanted_by()
             info_dict['Image'] = self.get_image()
             self.info_list.append(info_dict)            
-            time.sleep(2)
+            time.sleep(1)
         self.info_list = sorted(self.info_list, key=lambda k: k['Rating'], reverse = True) # sort games by rating value, highest first
         self.driver.quit()
         self.save_dict_records()
@@ -129,16 +130,31 @@ class Webscraper:
         if not os.path.exists(raw_data):
             os.mkdir(raw_data)
         else:
-            print ("raw_data directory already exists")
+            print ("raw_data directory already exists.")
         for game in self.info_list:
             directory = os.path.join(raw_data, game['BGG_ID'])
             try:
                 os.mkdir(directory)
             except:
-                print (f"game directory {game['BGG_ID']} already exists")
+                print (f"game directory {game['BGG_ID']} already exists.")
             data_file = os.path.join(directory, 'data.json')
             with open(data_file, 'w') as fp:
                 json.dump(game, fp)
+        self.save_game_images(raw_data)
+    
+
+    def save_game_images(self, raw_data): # save game image for each game within 'images' folder inside 'raw_data' folder
+        images = os.path.join(raw_data, 'images')
+        if not os.path.exists(images):
+            os.mkdir(images)
+        else:
+            print ('images directory already exists.')
+        for game in self.info_list:
+            name = f"{game['BGG_ID']}.jpg"
+            url = game['Image']
+            image_file = os.path.join(images, name)
+            urllib.request.urlretrieve(url, image_file)
+
 
             
 if __name__ == "__main__":
