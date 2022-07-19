@@ -26,6 +26,8 @@ The dictionaries are stored locally as JSON files within a unique folder for eac
 
 The game image files are downloaded and stored locally as jpeg files within an 'images' folder within the 'raw_data' folder. Each image has name set to game BGG_ID. The urllib module is imported for this purpose and the 'urllib.request.urlretrieve' function used.
 
+Added 'iterate_categories' function and altered other parts of the code so that the user can now decide to scrape all categories and return info on the top 6 games within each category. As some games fall within multiple categories, the code checks whether the game has already been scraped by checking whether its BGG_ID value exists within 'self.info_list'and, if so, it simply appends the current category to the 'category' value of the game (which is created as a list and can thus hold multiple values). 
+
 
 
 
