@@ -4,15 +4,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import urllib.request
+from urllib.parse import urlparse
 import time
 import uuid
 import os
 import json
 
+
 class Webscraper:
 
-    def __init__(self): # setup wedbdriver and info_list which will contain game data from top 6 games of user selected category. ask user to input category.
-        self.info_list = []
+    def __init__(self): # setup wedbdriver and game_dict which will contain game data from top 6 games of user selected category. ask user to input category.
+        self.game_dict = {} # will contain all game info
         self.category = input("Please enter board game category. Ensure first letter of all words is capitalised. Leave blank to scrape all categories: ")
         self.driver = webdriver.Chrome()
 
@@ -66,14 +68,6 @@ class Webscraper:
             game_link_list.append(link)
         return game_link_list 
         
-    def get_id(self): # get bgg game id info
-        try:
-            bgg_id_text = self.driver.find_element(By.XPATH, '//div[@class="game-itemid ng-binding"]').text
-            bgg_id = ''.join(filter(str.isdigit, bgg_id_text))  # extract number only from id text
-        except:
-            bgg_id = ""
-        return bgg_id
-
         
     def get_name(self): # get game name
         try:
@@ -106,9 +100,10 @@ class Webscraper:
             player_from = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[1]').text # get 'player from' info
             try:
                 player_to = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[2]').text # get 'player to' info (not all games have this element, thus use of 'try' function)
+                player_to = player_to.replace('–', ' to ')
             except:
                 player_to = ""
-            num_players = player_from + player_to # calculate game number of players. 'From-To' format
+            num_players = player_from + player_to # calculate game number of players. 'From To' format
         except:
             num_players = ""
         return num_players
@@ -144,24 +139,28 @@ class Webscraper:
     def iterate_categories(self):
         links = self.category_links()
         for hyper in links:
-            time.sleep(2)
+            time.sleep(1)
             self.driver.get(hyper)
             category = self.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text
-            get_game_info = self.iterate_games(category)
-        self.info_list = sorted(self.info_list, key=lambda k: k['Rating'], reverse = True) # sort games by rating value, highest first
+            self.iterate_games(category)
         self.driver.quit()
-        self.save_dict_records()
+        save_dict_records(self.game_dict)
     
     
-    def iterate_games(self, category): # open game pages, create dictionary of info for each game and append dictionaries to info_list. quit driver when complete. 
-        time.sleep(2)
+    def iterate_games(self, category): # open game pages, create dictionary of info for each game and append dictionaries to game_dict. quit driver when complete. 
+        time.sleep(1)
         links = self.game_links()
         for hyper in links:
-            self.driver.get(hyper)
-            if not any(d['BGG_ID'] == self.get_id() for d in self.info_list):
+            parse = urlparse(hyper)
+            path = parse[2].split("/")
+            BGG_ID = path[2]
+            if BGG_ID in self.game_dict:
+                self.game_dict[BGG_ID]['Category'].append(category)
+            else:
+                self.driver.get(hyper)
                 info_dict = {'UUID': "", 'BGG_ID': "", 'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': "", 'Image': "", 'Category': []}
                 info_dict['UUID'] = str(uuid.uuid4())
-                info_dict['BGG_ID'] = self.get_id()
+                info_dict['BGG_ID'] = BGG_ID
                 info_dict['Name'] = self.get_name()
                 info_dict['Year'] = self.get_year()
                 info_dict['Rating'] = self.get_rating()
@@ -170,48 +169,41 @@ class Webscraper:
                 info_dict['Wanted By'] = self.get_wanted_by()
                 info_dict['Image'] = self.get_image()
                 info_dict['Category'].append(category)
-                self.info_list.append(info_dict)
-            else:
-                game = next(item for item in self.info_list if item['BGG_ID'] == self.get_id())
-                game['Category'].append(category)        
-            time.sleep(2)
-        
+                self.game_dict[BGG_ID] = info_dict
+            time.sleep(1)
 
-    def save_dict_records(self): # save each game dictionary in unique folder within folder 'raw_data'
-        raw_data = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data'
-        if not os.path.exists(raw_data):
-            os.mkdir(raw_data)
-        else:
-            print ("raw_data directory already exists.")
-        for game in self.info_list:
-            directory = os.path.join(raw_data, game['BGG_ID'])
-            try:
-                os.mkdir(directory)
-            except:
-                print (f"game directory {game['BGG_ID']} already exists.")
-            data_file = os.path.join(directory, 'data.json')
-            with open(data_file, 'w') as fp:
-                json.dump(game, fp)
-        self.save_game_images(raw_data)
-    
 
-    def save_game_images(self, raw_data): # save game image for each game within 'images' folder inside 'raw_data' folder
-        images = os.path.join(raw_data, 'images')
-        if not os.path.exists(images):
-            os.mkdir(images)
-        else:
-            print ('images directory already exists.')
-        for game in self.info_list:
-            name = f"{game['BGG_ID']}.jpg"
-            url = game['Image']
-            image_file = os.path.join(images, name)
-            urllib.request.urlretrieve(url, image_file)
+def save_dict_records(game_dict): # save each game dictionary in unique folder within folder 'raw_data'
+    raw_data = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data'
+    if not os.path.exists(raw_data):
+        os.mkdir(raw_data)
+    else:
+        print ("raw_data directory already exists.")
+    for game in game_dict:
+        directory = os.path.join(raw_data, game)
+        try:
+            os.mkdir(directory)
+        except:
+            print (f"game directory {game} already exists.")
+        data_file = os.path.join(directory, 'data.json')
+        with open(data_file, 'w') as fp:
+            json.dump(game_dict[game], fp)
+    save_game_images(raw_data, game_dict)
 
-            
+
+def save_game_images(raw_data, game_dict): # save game image for each game within 'images' folder inside 'raw_data' folder
+    images = os.path.join(raw_data, 'images')
+    if not os.path.exists(images):
+        os.mkdir(images)
+    else:
+        print ('images directory already exists.')
+    for game in game_dict:
+        name = f"{game}.jpg"
+        url = game_dict[game]['Image']
+        image_file = os.path.join(images, name)
+        urllib.request.urlretrieve(url, image_file)
+
+
 if __name__ == "__main__":
     scrape = Webscraper()
     scrape.open_website()
-
-
-    
-
