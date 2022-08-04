@@ -4,7 +4,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import urllib.request
-from urllib.parse import urlparse
 import time
 import uuid
 import os
@@ -13,8 +12,8 @@ import json
 
 class Webscraper:
 
-    def __init__(self): # setup wedbdriver and game_dict which will contain game data from top 6 games of user selected category. ask user to input category.
-        self.game_dict = {} # will contain all game info
+    def __init__(self): # setup wedbdriver and game_dict which will contain game data from top 6 games of user selected category or all categories. ask user to input category.
+        self.game_dict = {} # will contain all game info, each game will be contained within nested dictionary
         self.category = input("Please enter board game category. Ensure first letter of all words is capitalised. Leave blank to scrape all categories: ")
         self.driver = webdriver.Chrome()
 
@@ -148,12 +147,11 @@ class Webscraper:
     
     
     def iterate_games(self, category): # open game pages, create dictionary of info for each game and append dictionaries to game_dict. quit driver when complete. 
+        def iterate_games(self, category): # open game pages, create dictionary of info for each game and append dictionaries to game_dict. quit driver when complete. 
         time.sleep(1)
         links = self.game_links()
         for hyper in links:
-            parse = urlparse(hyper)
-            path = parse[2].split("/")
-            BGG_ID = path[2]
+            BGG_ID = hyper.split("/")[4]
             if BGG_ID in self.game_dict:
                 self.game_dict[BGG_ID]['Category'].append(category)
             else:
