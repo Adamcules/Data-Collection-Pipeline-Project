@@ -147,7 +147,6 @@ class Webscraper:
     
     
     def iterate_games(self, category): # open game pages, create dictionary of info for each game and append dictionaries to game_dict. quit driver when complete. 
-        def iterate_games(self, category): # open game pages, create dictionary of info for each game and append dictionaries to game_dict. quit driver when complete. 
         time.sleep(1)
         links = self.game_links()
         for hyper in links:
