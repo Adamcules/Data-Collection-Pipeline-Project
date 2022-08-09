@@ -243,14 +243,14 @@ class Webscraper:
         time.sleep(1)
         links = self.game_links()
         for hyper in links:
-            BGG_ID = hyper.split("/")[4]
-            if BGG_ID in self.game_dict:
-                self.game_dict[BGG_ID]['Category'].append(category)
+            bgg_id = hyper.split("/")[4]
+            if bgg_id in self.game_dict:
+                self.game_dict[bgg_id]['Category'].append(category)
             else:
                 self.driver.get(hyper)
                 info_dict = {'UUID': "", 'BGG_ID': "", 'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': "", 'Image': "", 'Category': []}
                 info_dict['UUID'] = str(uuid.uuid4())
-                info_dict['BGG_ID'] = BGG_ID
+                info_dict['BGG_ID'] = bgg_id
                 info_dict['Name'] = self.get_name()
                 info_dict['Year'] = self.get_year()
                 info_dict['Rating'] = self.get_rating()
@@ -259,7 +259,7 @@ class Webscraper:
                 info_dict['Wanted By'] = self.get_wanted_by()
                 info_dict['Image'] = self.get_image()
                 info_dict['Category'].append(category)
-                self.game_dict[BGG_ID] = info_dict
+                self.game_dict[bgg_id] = info_dict
             time.sleep(1)
 
 
