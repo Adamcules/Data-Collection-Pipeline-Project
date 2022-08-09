@@ -9,7 +9,7 @@ Chosen website as large amount of categorised data with statistics. <br />
 ## Milestone 2
 Created scraper class (python file). <br />
 Use Selenium webdriver (Chrome) to navigate through website and retrieve data. <br />
-Code asks user for a particular category of board game and is returned info as a dictionary (with nested dictionaries) on the top 6 games (by rating) within that category: <br />
+Code asks user for a particular category of board game and is returned info as a list (with nested dictionaries) on the top 6 games (by rating) within that category: <br />
 
 ![Adventure Game Info](https://user-images.githubusercontent.com/106440366/178328806-115d4dcf-da1b-4333-b532-e3a13b0d4151.JPG)
 
@@ -30,6 +30,8 @@ Added 'iterate_categories' function and altered other parts of the code so that 
 
 ## Milestone 4
 Optimised code:
+Changed game_list type from list to dictionary (renamed to game_dict) in order to speed up iteration checks.
+
 Extracted BGG_ID value in iterate_game method by using .split() function on the game URL in order to determine BGG_ID more reliably. The function now checks whether BGG_ID exists within game_dict before making driver goto game page and if so, simply appends the current category name as a value to the game's [Category] key within game_dict:
 
 ![Check bgg_id in game_dict](https://user-images.githubusercontent.com/106440366/183736925-9ca15af0-944c-4bb4-81b9-8208c3806e52.JPG)
