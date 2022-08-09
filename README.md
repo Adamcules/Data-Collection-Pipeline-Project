@@ -29,11 +29,12 @@ The game image files are downloaded and stored locally as jpeg files within an '
 Added 'iterate_categories' function and altered other parts of the code so that the user can now decide to scrape all categories and return info on the top 6 games within each category. As some games fall within multiple categories, the code checks whether the game has already been scraped by checking whether its BGG_ID value exists within 'self.info_list'and, if so, it simply appends the current category to the 'category' value of the game (which is created as a list and can thus hold multiple values). 
 
 ## Milestone 4
+Optimised code:
+Extracted BGG_ID value in iterate_game method by using .split() function on the game URL in order to determine BGG_ID more reliably. The function now checks whether BGG_ID exists within game_dict before making driver goto game page and if so, simply appends the current category name as a value to the game's [Category] key within game_dict:
 
+![Check bgg_id in game_dict](https://user-images.githubusercontent.com/106440366/183736925-9ca15af0-944c-4bb4-81b9-8208c3806e52.JPG)
 
-
-
-
+Added docstrings to all functions
 
 
 Example text below
