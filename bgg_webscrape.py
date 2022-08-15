@@ -23,7 +23,7 @@ class Webscraper:
     The webdriver opens the 'Categories' page on the website 'BoardGameGeek' (BGG). The driver then iterates through
     and follows the URL to each category found on the page (unless the user enters a specific category to check). 
     Within each category, the driver iterates through and follows the URL to each of the 'Top 6' games listed
-    under that category. The driver then gasthers info on each of those games, storing the info within the 
+    under that category. The driver then gathers info on each of those games, storing the info within the 
     dictionary 'game_dict'.
 
     Attributes:
@@ -53,7 +53,7 @@ class Webscraper:
         try:
             cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, '//*[@id="c-p-bn"]')))
             cookies_button.click()
-        except TimeoutException:
+        except TimeoutException
             pass
         self.select_category(self.category)
 
