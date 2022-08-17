@@ -318,3 +318,13 @@ class Local_Save:
 if __name__ == "__main__":
     scrape = Webscraper()
     scrape.open_website()
+    if scrape.category == "":
+        category_links = scrape.category_links()
+        scrape.iterate_categories(category_links)
+    else:
+        scrape.select_category(scrape.category)
+        scrape.iterate_games(scrape.category)
+        scrape.driver.quit()
+    data_save = Local_Save()
+    data_save.save_dict_records(scrape.game_dict)
+    data_save.save_game_images(scrape.game_dict)
