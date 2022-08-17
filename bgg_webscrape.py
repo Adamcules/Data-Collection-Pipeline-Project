@@ -53,7 +53,7 @@ class Webscraper:
         try:
             cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, '//*[@id="c-p-bn"]')))
             cookies_button.click()
-        except TimeoutException
+        except TimeoutException:
             pass
         self.select_category(self.category)
 
