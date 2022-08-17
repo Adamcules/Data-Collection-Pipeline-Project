@@ -25,7 +25,7 @@ class Webscraper:
     Within each category, the driver iterates through and follows the URL to each of the 'Top 6' games listed
     under that category. The driver then gathers info on each of those games, storing the info within the 
     dictionary 'game_dict'.
-
+   
     Attributes:
         game_dict (dict): Stores all the game info scraped.
         category (str): The category to be scraped entered by the user (if left blank, all categories are scraped).
@@ -36,7 +36,7 @@ class Webscraper:
         See help(Webscraper) for accurate signature.
         """
         self.game_dict = {} 
-        self.category = input("Please enter board game category. Ensure first letter of all words is capitalised. Leave blank to scrape all categories: ")
+        self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).capitalize()
         self.driver = webdriver.Chrome()
 
     
@@ -53,9 +53,8 @@ class Webscraper:
         try:
             cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, '//*[@id="c-p-bn"]')))
             cookies_button.click()
-        except TimeoutException
+        except TimeoutException:
             pass
-        self.select_category(self.category)
 
 
     def select_category(self, category: str):
@@ -67,31 +66,32 @@ class Webscraper:
         'self.iterate_games' method to scrape games info from that one category.
         """
         time.sleep(1)
-        if category == "": 
-            self.iterate_categories()
-        else:
-            delay = 4
-            try:   
-                link = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.LINK_TEXT, f"{category}")))
-                link.click()
-                self.iterate_games(category)
-            except TimeoutException:
-                print ("Input does not match an available category. Please run file again and enter valid category")
-                #TODO: get user to re-enter category without having to rerun file
-                self.driver.quit()
+        # if category == "": 
+        #     self.iterate_categories()
+        # else:
+        delay = 4
+        try:   
+            link = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.LINK_TEXT, f"{category}")))
+            link.click()
+            # self.iterate_games(category)
+        except TimeoutException:
+            print ("Input does not match an available category. Please run file again and enter valid category")
+            #TODO: get user to re-enter category without having to rerun file
+            self.driver.quit()
 
 
     def category_links(self):
         """
         This function returns a list of links to all categories on the 'Categories' page. 
         """
+        time.sleep(2)
         category_container = self.driver.find_element(By.XPATH, '//*[@id="maincontent"]/table/tbody') # element containing all categories on page
         category_list = category_container.find_elements(By.XPATH, './tr/td') # list of categories 
         category_link_list = []
         for category in category_list:
             a_tag = category.find_element(By.TAG_NAME, 'a')
             link = a_tag.get_attribute('href')
-            category_link_list.append(link)   
+            category_link_list.append(link)  
         return category_link_list
 
 
@@ -195,7 +195,7 @@ class Webscraper:
         return image_src
 
 
-    def iterate_categories(self):
+    def iterate_categories(self, category_links):
         """
         This function makes the webdriver click on each category on the 'Categories' page.
 
@@ -205,14 +205,13 @@ class Webscraper:
         Finally it makes the driver quit and makes a call to the function 'save_dict_records', passing self.game_dict
         as an argument.
         """
-        links = self.category_links()
-        for hyper in links:
+        for hyper in category_links:
             time.sleep(1)
             self.driver.get(hyper)
             category = self.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text
             self.iterate_games(category)
         self.driver.quit()
-        save_dict_records(self.game_dict)
+        #save_dict_records(self.game_dict)
     
     
     def iterate_games(self, category: str): 
@@ -263,51 +262,69 @@ class Webscraper:
             time.sleep(1)
 
 
-def save_dict_records(game_dict):
-    """
-    This function is passed the game_dict from the Webscraper class and saves individual game info as JSON files
-    within local folders.
+class Local_Save:
 
-    The function attempts to create a file called 'raw_data' within the specified directory. The function then
-    iterates through each game in game_dict, creating a folder for each game within raw_data named after the BGG_ID
-    number of the game and then writes a JSON file within the folder containg all game info scraped by the Webscraper
-    class.
+    def __init__(self, save_folder: str = input('Please enter directory for local save folder. Leave blank for default: ')):
+        if save_folder == "":
+            self.save_folder = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data'
+        else:
+            self.save_folder = save_folder 
 
-    Finally the function calls to save_game_images.
-    """
-    raw_data = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data'
-    if not os.path.exists(raw_data):
-        os.mkdir(raw_data)
-    else:
-        print ("raw_data directory already exists.")
-    for game in game_dict:
-        directory = os.path.join(raw_data, game)
-        try:
-            os.mkdir(directory)
-        except:
-            print (f"game directory {game} already exists.")
-        data_file = os.path.join(directory, 'data.json')
-        with open(data_file, 'w') as fp:
-            json.dump(game_dict[game], fp)
-    save_game_images(raw_data, game_dict)
+    def save_dict_records(self, game_dict):
+        """
+        This function is passed the game_dict from the Webscraper class and saves individual game info as JSON files
+        within local folders.
+
+        The function attempts to create a file called 'raw_data' within the specified directory. The function then
+        iterates through each game in game_dict, creating a folder for each game within raw_data named after the BGG_ID
+        number of the game and then writes a JSON file within the folder containg all game info scraped by the Webscraper
+        class.
+
+        Finally the function calls to save_game_images.
+        """
+        #raw_data = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data'
+        if not os.path.exists(self.save_folder):
+            os.mkdir(self.save_folder)
+        else:
+            print ("local save directory already exists.")
+        for game in game_dict:
+            directory = os.path.join(self.save_folder, game)
+            try:
+                os.mkdir(directory)
+            except:
+                print (f"game directory {game} already exists.")
+            data_file = os.path.join(directory, 'data.json')
+            with open(data_file, 'w') as fp:
+                json.dump(game_dict[game], fp)
+        #save_game_images(raw_data, game_dict)
 
 
-def save_game_images(raw_data, game_dict): # save game image for each game within 'images' folder inside 'raw_data' folder
-    """
-    This function saves the game icon image for each game in a folder called 'images' within the 'raw_data' folder. 
-    """
-    images = os.path.join(raw_data, 'images')
-    if not os.path.exists(images):
-        os.mkdir(images)
-    else:
-        print ('images directory already exists.')
-    for game in game_dict:
-        name = f"{game}.jpg"
-        url = game_dict[game]['Image']
-        image_file = os.path.join(images, name)
-        urllib.request.urlretrieve(url, image_file)
+    def save_game_images(self, game_dict): # save game image for each game within 'images' folder inside 'raw_data' folder
+        """
+        This function saves the game icon image for each game in a folder called 'images' within the 'raw_data' folder. 
+        """
+        images = os.path.join(self.save_folder, 'images')
+        if not os.path.exists(images):
+            os.mkdir(images)
+        else:
+            print ('images directory already exists.')
+        for game in game_dict:
+            name = f"{game}.jpg"
+            url = game_dict[game]['Image']
+            image_file = os.path.join(images, name)
+            urllib.request.urlretrieve(url, image_file)
 
 
 if __name__ == "__main__":
     scrape = Webscraper()
     scrape.open_website()
+    if scrape.category == "":
+        category_links = scrape.category_links()
+        scrape.iterate_categories(category_links)
+    else:
+        scrape.select_category(scrape.category)
+        scrape.iterate_games(scrape.category)
+        scrape.driver.quit()
+    save = Local_Save()
+    save.save_dict_records(scrape.game_dict)
+    save.save_game_images(scrape.game_dict)
