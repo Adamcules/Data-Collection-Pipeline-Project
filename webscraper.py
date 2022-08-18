@@ -205,15 +205,16 @@ class BGG_Scraper(Webscraper):
         Finally it makes the driver quit and makes a call to the function 'save_dict_records', passing self.game_dict
         as an argument.
         """
+        game_links = {}
         for hyper in category_links:
-            time.sleep(1)
+            time.sleep(2)
             self.driver.get(hyper)
             category = self.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text
-            self.iterate_games(category)
-        self.driver.quit()
+            game_links[category] = self.__game_links()
+        return game_links
     
     
-    def iterate_games(self, category: str): 
+    def iterate_games(self, game_links: dict): 
         """
         This function checks whether a game has already been stored within self.game_dict and appends game info to self.game_dict accordingly.
         
@@ -239,32 +240,35 @@ class BGG_Scraper(Webscraper):
         [Category] key (which is a list).         
         """
         time.sleep(1)
-        links = self.__game_links()
-        for hyper in links:
-            bgg_id = hyper.split("/")[4]
-            if bgg_id in self.game_dict:
-                self.game_dict[bgg_id]['Category'].append(category)
-            else:
-                self.driver.get(hyper)
-                info_dict = {'UUID': "", 'BGG_ID': "", 'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': "", 'Image': "", 'Category': []}
-                info_dict['UUID'] = str(uuid.uuid4())
-                info_dict['BGG_ID'] = bgg_id
-                info_dict['Name'] = self.__get_name()
-                info_dict['Year'] = self.__get_year()
-                info_dict['Rating'] = self.__get_rating()
-                info_dict['Number of Players'] = self.__get_num_players()
-                info_dict['Age'] = self.__get_age()
-                info_dict['Wanted By'] = self.__get_wanted_by()
-                info_dict['Image'] = self.__get_image()
-                info_dict['Category'].append(category)
-                self.game_dict[bgg_id] = info_dict
-            time.sleep(1)
+        #links = self.__game_links()
+        for category in game_links:
+            for hyper in game_links[category]:
+                bgg_id = hyper.split("/")[4]
+                if bgg_id in self.game_dict:
+                    self.game_dict[bgg_id]['Category'].append(category)
+                else:
+                    self.driver.get(hyper)
+                    info_dict = {'UUID': "", 'BGG_ID': "", 'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': "", 'Image': "", 'Category': []}
+                    info_dict['UUID'] = str(uuid.uuid4())
+                    info_dict['BGG_ID'] = bgg_id
+                    info_dict['Name'] = self.__get_name()
+                    info_dict['Year'] = self.__get_year()
+                    info_dict['Rating'] = self.__get_rating()
+                    info_dict['Number of Players'] = self.__get_num_players()
+                    info_dict['Age'] = self.__get_age()
+                    info_dict['Wanted By'] = self.__get_wanted_by()
+                    info_dict['Image'] = self.__get_image()
+                    info_dict['Category'].append(category)
+                    self.game_dict[bgg_id] = info_dict
+                time.sleep(1)
 
     def run(self):
         self.accept_cookies('//*[@id="c-p-bn"]')
         if self.category == "":
             category_links = self.category_links()
-            self.iterate_categories(category_links)
+            game_links = self.iterate_categories(category_links)
+            self.iterate_games(game_links)
+            self.driver.quit()
         else:
             self.select_category(self.category)
             self.iterate_games(self.category)
