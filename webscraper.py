@@ -271,7 +271,9 @@ class BGG_Scraper(Webscraper):
             self.driver.quit()
         else:
             self.select_category(self.category)
-            self.iterate_games(self.category)
+            game_links = {}
+            game_links[self.category] = self.__game_links()
+            self.iterate_games(game_links)
             self.driver.quit()
 
 
