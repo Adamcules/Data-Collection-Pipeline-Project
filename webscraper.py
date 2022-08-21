@@ -1,6 +1,6 @@
 """
-This module contains a class for initialising a webscraper to scrape the website 'BoardGameGeek' (BGG) and
-functions for saving the scraped data in local files.
+This module contains classes for initialising a webdriver, a webscraper to scrape the website 'BoardGameGeek' (BGG) and
+for saving the scraped data in local files.
 """
 
 import json 
@@ -16,65 +16,66 @@ import uuid
 
 
 
-class Webscraper:
+class Webdriver:
     """
-    This class initialises a Chrome webdriver and generates a dictionary containing information on boardgames.
+    This class initialises a Chrome webdriver.
 
-    The webdriver opens the 'Categories' page on the website 'BoardGameGeek' (BGG). The driver then iterates through
-    and follows the URL to each category found on the page (unless the user enters a specific category to check). 
-    Within each category, the driver iterates through and follows the URL to each of the 'Top 6' games listed
-    under that category. The driver then gathers info on each of those games, storing the info within the 
-    dictionary 'game_dict'.
-   
+    The webdriver opens the url passed to it and attempts to click an 'Accept Cookies' button if it appears.
+
     Attributes:
-        game_dict (dict): Stores all the game info scraped.
-        category (str): The category to be scraped entered by the user (if left blank, all categories are scraped).
         driver (webdriver): Chrome webdriver imported from Selenium.
     """
     def __init__(self, url: str):
         """
-        See help(Webscraper) for accurate signature.
+        See help(Webdriver) for accurate signature.
         """
         self.driver = webdriver.Chrome()
         self.driver.get(url)
     
     
-    def accept_cookies(self, XPATH: str): 
+    def accept_cookies(self, xpath: str): 
         """
-        This function opens the BGG website. 
-        
-        The webdriver opens the website on the 'Categories' page and clicks the 'Accept Cookies' button if required.
-        The function then calls to the method "self.select_category"
+        This function clicks an 'Accept Cookies' button if it appears and passes if none appears after 4 seconds.
         """
         time.sleep(1)
         delay = 4
         try:
-            cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, XPATH)))
+            cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, xpath))) # wait up to 4 seconds for 'Accept Cookies' button to appear. XPATH to button passed to function as xpath) 
             cookies_button.click()
         except TimeoutException:
             pass
 
 
-class BGG_Scraper(Webscraper):
+class BGG_Scraper(Webdriver):
+    """ 
+    This class is a Child of the 'Webdriver' class. It uses the webdriver to scrape game info from the website 'boardgamegeek.com' (BGG).
+
+    The webdriver opens the 'Categories' page on the website. The driver then either goes to a specific category or iterates through all
+    categories based on user input.
+    Within each category page, the driver iterates through and follows the url to each of the 'Top 6' games listed under that category.
+    The driver then gathers info on each of those games, storing the info within the dictionary 'game_dict'.    
+    
+    Attributes:
+    game_dict (dict): Stores all the game info scraped.
+    category (str): The category to be scraped entered by the user (if left blank, all categories are scraped)."""
+
     def __init__(self, url: str = "https://boardgamegeek.com/browse/boardgamecategory"):
         super().__init__(url)
         self.game_dict = {} 
-        self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).capitalize()
+        self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).capitalize() # User input determines whether all categories will be scraped or one specific category.
     
     def select_category(self, category: str):
         """
-        This function makes webdriver iterate through all categories or goto one specific category.
-
-        If the user did not enter a category, this function calls the 'self.iterate_categories' function which iterates
-        through all categories, otherwise it makes the driver click on a specific category and then calls to the
-        'self.iterate_games' method to scrape games info from that one category.
+        This function is called when the user enters a specific category.
+        
+        It makes the webdriver click on the link to the specific category.
         """
         time.sleep(1)
         delay = 4
         try:   
             link = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.LINK_TEXT, f"{category}")))
             link.click()
-        except TimeoutException:
+        except TimeoutException: # if invalid category is inputted message is printed and file stops running
             print ("Input does not match an available category. Please run file again and enter valid category")
             #TODO: get user to re-enter category without having to rerun file
             self.driver.quit()
@@ -82,13 +83,13 @@ class BGG_Scraper(Webscraper):
 
     def category_links(self):
         """
-        This function returns a list of links to all categories on the 'Categories' page. 
+        This function returns category_link list. A list of links to all categories on the 'Categories' page. 
         """
         time.sleep(2)
         category_container = self.driver.find_element(By.XPATH, '//*[@id="maincontent"]/table/tbody') # element containing all categories on page
         category_list = category_container.find_elements(By.XPATH, './tr/td') # list of categories 
         category_link_list = []
-        for category in category_list:
+        for category in category_list: # iterates through categories and appends href of each category to category_link_list
             a_tag = category.find_element(By.TAG_NAME, 'a')
             link = a_tag.get_attribute('href')
             category_link_list.append(link)  
@@ -97,12 +98,12 @@ class BGG_Scraper(Webscraper):
 
     def __game_links(self):
         """
-        This function returns a list of links to each of the 'Top 6' games listed under a category.
+        This function returns game_link_list. A list of links to each of the 'Top 6' games listed under a category.
         """
         game_container = self.driver.find_element(By.XPATH, '//*[@class="rec-grid-overview"]') # element containing top 6 games listed on page
         game_list = game_container.find_elements(By.XPATH, './li') # list of games on page
-        game_link_list = [] # will contain hyperlinks to top 6 games listed
-        for game in game_list: # iterate through games and get hyperlinks
+        game_link_list = []
+        for game in game_list: # iterates through games and appends href of each game to game_link_list
             a_tag = game.find_element(By.TAG_NAME, 'a')
             link = a_tag.get_attribute('href')
             game_link_list.append(link)
@@ -136,9 +137,9 @@ class BGG_Scraper(Webscraper):
         This function returns the rating of a game (scored out of 10)
         """    
         try:
-            ratings_tab = self.driver.find_element(By.XPATH, '//*[@id="primary_tabs"]/ul/li[2]') 
+            ratings_tab = self.driver.find_element(By.XPATH, '//*[@id="primary_tabs"]/ul/li[2]') # get 'ratings' tab
             ratings_tab.click() # switch to 'ratings' tab 
-            rating = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/div/ui-view/ui-view/div/ratings-module/div/div[2]/div[1]/div[1]/div[2]/div[1]/div[2]/ul/li[1]/div[2]').text # get game rating
+            rating = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/div/ui-view/ui-view/div/ratings-module/div/div[2]/div[1]/div[1]/div[2]/div[1]/div[2]/ul/li[1]/div[2]').text
         except:
             rating = ""
         return rating
@@ -149,8 +150,8 @@ class BGG_Scraper(Webscraper):
         try:
             player_from = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[1]').text # get 'player from' info
             try:
-                player_to = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[2]').text # get 'player to' info (not all games have this element, thus use of 'try' function)
-                player_to = player_to.replace('–', ' to ')
+                player_to = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/ng-include/div/div[2]/div[2]/div[2]/gameplay-module/div/div/ul/li[1]/div[1]/span/span[2]').text # get 'player to' info (not all games have this element))
+                player_to = player_to.replace('–', ' to ') # make number of players read '2 to 4' instead of '2 - 4' as dash symbol used on website is U+2013, which is uncommon in source code.
             except:
                 player_to = ""
             num_players = player_from + player_to # calculate game number of players. 'From To' format
@@ -175,9 +176,9 @@ class BGG_Scraper(Webscraper):
         This function returns the number of people who have this game on their BGG wishlist"
         """
         try:
-            stats_tab = self.driver.find_element(By.XPATH, '//*[@id="primary_tabs"]/ul/li[7]') 
+            stats_tab = self.driver.find_element(By.XPATH, '//*[@id="primary_tabs"]/ul/li[7]') # get 'stats' tab 
             stats_tab.click() # switch to 'stats' tab
-            wanted_by = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/div/ui-view/ui-view/div/div/div[2]/div/div[3]/div[2]/div[2]/ul/li[5]/div[2]/a').text # get 'wanted by' info (number of people expressing wish to get game)
+            wanted_by = self.driver.find_element(By.XPATH, '//*[@id="mainbody"]/div[2]/div/div[1]/div[2]/ng-include/div/div/ui-view/ui-view/div/div/div[2]/div/div[3]/div[2]/div[2]/ul/li[5]/div[2]/a').text 
         except:
             wanted_by = ""
         return wanted_by
@@ -197,34 +198,33 @@ class BGG_Scraper(Webscraper):
 
     def iterate_categories(self, category_links):
         """
-        This function makes the webdriver click on each category on the 'Categories' page.
+        This function makes the webdriver goto each category and returns a dictionary (game_links) containing links to each of the 'top 6' games listed under each category.
 
-        The function iterates through each hyperlink in the list 'links' (returned by self.category_links()). The
-        driver follows each link and for each makes a call to the method 'self.iterate_games', passing the
-        argument 'category' as a string, which is the name of the current category (e.g. 'Card Game').
-        Finally it makes the driver quit and makes a call to the function 'save_dict_records', passing self.game_dict
-        as an argument.
+        The function iterates through and goes to each hyperlink in category_links list. For each category, it adds the category name
+        as a key to the dictionary game_links and makes a call to self.__game_links which returns a list of links to games which is added
+        as the value to the category key in the dictionary.
         """
         game_links = {}
         for hyper in category_links:
             time.sleep(2)
             self.driver.get(hyper)
-            category = self.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text
-            game_links[category] = self.__game_links()
+            category = self.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text # get category name
+            game_links[category] = self.__game_links() # create category name as key and self.__game_links() as value.
         return game_links
     
     
     def iterate_games(self, game_links: dict): 
         """
-        This function checks whether a game has already been stored within self.game_dict and appends game info to self.game_dict accordingly.
+        This function iterates through game_links, checking whether a game has already been added to self.game_dict and appending game info accordingly.
         
-        After the driver has followed a link to a given category page, this function calls to self.game_links to create a list called 'links'
-        which contains links to the top 6 games listed for the category. The function checks to see if any of the games have already been added
-        to self.game_dict. If not, the driver goes to the game page and creates a dictionary (info_dict) to contain scraped game info. The
-        function then calls various class methods to obtain the following info and append to info_dict:
+        The function first checks to see if the game has already been added to self.game_dict. If so, it does not follow the game link and simply
+        adds the name of the current category as a value to the game's [Category] key (which is a list) within the game's info dictionary: info_dict (a
+        game can appear as a 'top 6' game in more than one category).
+        If the game has not been added, the driver goes to the game page and creates info_dict to contain scraped game info. The function then calls
+        various class methods to obtain the following info and add it to info_dict:
         
         'UUID'              (generated as a uuid4 by the function using uuid library)
-        'BGG_ID'            (a unique ID number for the game assigned by BoardGameGeek)
+        'BGG_ID'            (a unique ID number for the game assigned by BGG)
         'Name'              (name of boardgame)
         'Year'              (year game was published)
         'Rating'            (a game rating score out of 10)
@@ -234,18 +234,14 @@ class BGG_Scraper(Webscraper):
         'Image'             (url of game icon image)
         'Category'          (list of categories for which the game is rated as a 'Top 6' game)
 
-        This dictionary of game info is then appended as a nested dictionary to self.game_dict.
-
-        If the game has already been added to self.game_dict, then only the category name is appended as a value to the game's 
-        [Category] key (which is a list).         
+        This dictionary of game info is then added as a nested dictionary to self.game_dict, with the BGG_ID used as the key.
         """
         time.sleep(1)
-        #links = self.__game_links()
-        for category in game_links:
-            for hyper in game_links[category]:
-                bgg_id = hyper.split("/")[4]
-                if bgg_id in self.game_dict:
-                    self.game_dict[bgg_id]['Category'].append(category)
+        for category in game_links: # iterate through each category in game_links dictionary (category names are used as keys)
+            for hyper in game_links[category]: # iterate through each game link for each category within game_links dictionary
+                bgg_id = hyper.split("/")[4] # get bgg_id from game's url
+                if bgg_id in self.game_dict: # check whether game has already been added to self.game_dict
+                    self.game_dict[bgg_id]['Category'].append(category) # append current category name as value to game's [Category] key within self.game_dict
                 else:
                     self.driver.get(hyper)
                     info_dict = {'UUID': "", 'BGG_ID': "", 'Name': "", 'Year': "", 'Rating': "", 'Number of Players': "", 'Age': "", 'Wanted By': "", 'Image': "", 'Category': []}
@@ -259,78 +255,112 @@ class BGG_Scraper(Webscraper):
                     info_dict['Wanted By'] = self.__get_wanted_by()
                     info_dict['Image'] = self.__get_image()
                     info_dict['Category'].append(category)
-                    self.game_dict[bgg_id] = info_dict
+                    self.game_dict[bgg_id] = info_dict # add info_dict as value to self.game_dict, using bgg_id as key.
                 time.sleep(1)
 
     def run(self):
-        self.accept_cookies('//*[@id="c-p-bn"]')
-        if self.category == "":
-            category_links = self.category_links()
-            game_links = self.iterate_categories(category_links)
-            self.iterate_games(game_links)
+        """
+        This function contains the logic for running an instance of BBG_Scraper class.
+
+        The function first makes a call to self.accept_cookes. Then if the user has not entered a specific category it makes a call to
+        self.category_links to get a list of links to all categories (category_links). This is then passed to self.iterate_categories
+        to get a dictionary containing links to the 'top 6' games for each category (game_links). Finally, game_links is passed in turn
+        to self.iterate_games to scrape info for each game and add that info to self.game_dict.
+
+        If the user did enter a category, the function makes a call to self.select_category to goto the specific category page. The function
+        then creates the dictionary game_links, adding a single 'key : value' pair that has the selected category name as key and a list of
+        links to the the 'top 6' games for that category, obtained by calling to self.__game_links.
+        The game_links dictionary is then passed to self.iterate_games to scrape info for each game and add that info to self.game_dict.
+        """
+        
+        self.accept_cookies('//*[@id="c-p-bn"]') # click 'Accept Cookies' button
+        if self.category == "": # check whether user enter a specific category or no
+            category_links = self.category_links() # obtain links to categories
+            game_links = self.iterate_categories(category_links) # obtain links to games
+            self.iterate_games(game_links) # scrape info for each game
             self.driver.quit()
         else:
-            self.select_category(self.category)
+            self.select_category(self.category) # goto category page entered by user
             game_links = {}
-            game_links[self.category] = self.__game_links()
-            self.iterate_games(game_links)
+            game_links[self.category] = self.__game_links() # add list of game links as value to game_links dictionary
+            self.iterate_games(game_links) # scrape info for each game
             self.driver.quit()
 
 
 class Local_Save:
 
-    def __init__(self, save_folder: str = input('Please enter directory for local save folder. Leave blank for default: ')):
+    """
+    This class contains methods to save information passed to it as a python dictionary within local folders.
+
+    A user can enter a directory to store all the files or use the default directory.
+    """
+    
+    def __init__(self, game_dict: dict, save_folder: str = input('Please enter directory for local save folder. Leave blank for default: ')):
+        self.game_dict = game_dict
         if save_folder == "":
-            self.save_folder = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data'
+            self.save_folder = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data' # default directory used if user does not enter alternative
         else:
             self.save_folder = save_folder 
 
-    def save_dict_records(self, game_dict):
+    def save_dict_records(self):
         """
-        This function is passed the game_dict from the Webscraper class and saves individual game info as JSON files
-        within local folders.
-
-        The function attempts to create a file called 'raw_data' within the specified directory. The function then
-        iterates through each game in game_dict, creating a folder for each game within raw_data named after the BGG_ID
-        number of the game and then writes a JSON file within the folder containg all game info scraped by the Webscraper
-        class.
-
-        Finally the function calls to save_game_images.
+        This function saves dictionary values as JSON files within a local directory folder. 
+        
+        The function attempts to create a file called 'raw_data' (unless the user has specified another directory). 
+        The function then iterates through each item in the dictionary passed to it, checks whether a folder has already been created for that
+        item and, if not, creates a folder for it within the parent folder, naming the folder after the dictionary key name.
+        It then writes a JSON file within that folder called 'data.json' which contains the value information for that dictionary item.
         """
-        if not os.path.exists(self.save_folder):
-            os.mkdir(self.save_folder)
+        if not os.path.exists(self.save_folder): # check whether directory already exists
+            os.mkdir(self.save_folder) # create new folder
         else:
             print ("local save directory already exists.")
-        for game in game_dict:
-            directory = os.path.join(self.save_folder, game)
+        for game in self.game_dict: # iterate through dictionary passed to instance of class
+            directory = os.path.join(self.save_folder, game) # create directory name for dictionary item
             try:
-                os.mkdir(directory)
+                os.mkdir(directory) # check whether folder already exists for dictionary item and create if it doesn't
             except:
                 print (f"game directory {game} already exists.")
-            data_file = os.path.join(directory, 'data.json')
-            with open(data_file, 'w') as fp:
-                json.dump(game_dict[game], fp)
+            data_file = os.path.join(directory, 'data.json') # create file name for saved data 
+            with open(data_file, 'w') as fp: # write json file containing value info for dictionary item
+                json.dump(self.game_dict[game], fp)
 
 
-    def save_game_images(self, game_dict): # save game image for each game within 'images' folder inside 'raw_data' folder
+    def save_game_images(self): 
         """
-        This function saves the game icon image for each game in a folder called 'images' within the 'raw_data' folder. 
+        This function creates a file called 'images' within the parent folder created by self.save_dict_records and saves image files found within dictionary passed to instance of class  
+        
+        NB: For this function to work, the dictionary passed to the class must consist of nested dictionaries containing the key 'Images'.
+
+        The function first checks whether a folder called 'images' has been created within the parent folder. If not, it creates this folder.
+        The function then iterates through the dictionary passed to the class instance. For each item, it obtains the url to the image file
+        stored under the nested dictionary key 'Images' and saves the image within the 'images' folder using urllib.request library and
+        .urlretrieve function. The file is named after the key name.
         """
-        images = os.path.join(self.save_folder, 'images')
-        if not os.path.exists(images):
-            os.mkdir(images)
+        images = os.path.join(self.save_folder, 'images') # create 'images' folder name
+        if not os.path.exists(images): # check if folder already exists
+            os.mkdir(images) # create folder
         else:
             print ('images directory already exists.')
-        for game in game_dict:
-            name = f"{game}.jpg"
-            url = game_dict[game]['Image']
-            image_file = os.path.join(images, name)
-            urllib.request.urlretrieve(url, image_file)
+        for game in self.game_dict:
+            name = f"{game}.jpg" # create file name for image 
+            url = self.game_dict[game]['Image'] # get url for image
+            image_file = os.path.join(images, name) # create directory for image file
+            urllib.request.urlretrieve(url, image_file) # save image file in 'images' folder
+        
+    def run(self):
+        """
+        This function contains the logic for running an instance of Local_Save class.
+
+        The function calls to self.save_dict_recrods and self.save_game_images in turn.
+        """
+        self.save_dict_records()
+        self.save_game_images()
+
 
 
 if __name__ == "__main__":
     bgg_scrape = BGG_Scraper()
     bgg_scrape.run()
-    data_save = Local_Save()
-    data_save.save_dict_records(bgg_scrape.game_dict)
-    data_save.save_game_images(bgg_scrape.game_dict)
+    data_save = Local_Save(bgg_scrape.game_dict)
+    data_save.run()
