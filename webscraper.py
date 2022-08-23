@@ -96,7 +96,7 @@ class BGG_Scraper(Webdriver):
         return category_link_list
 
 
-    def __game_links(self):
+    def game_links(self):
         """
         This function returns game_link_list. A list of links to each of the 'Top 6' games listed under a category.
         """
@@ -201,7 +201,7 @@ class BGG_Scraper(Webdriver):
         This function makes the webdriver goto each category and returns a dictionary (game_links) containing links to each of the 'top 6' games listed under each category.
 
         The function iterates through and goes to each hyperlink in category_links list. For each category, it adds the category name
-        as a key to the dictionary game_links and makes a call to self.__game_links which returns a list of links to games which is added
+        as a key to the dictionary game_links and makes a call to self.game_links which returns a list of links to games which is added
         as the value to the category key in the dictionary.
         """
         game_links = {}
@@ -209,7 +209,7 @@ class BGG_Scraper(Webdriver):
             time.sleep(2)
             self.driver.get(hyper)
             category = self.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text # get category name
-            game_links[category] = self.__game_links() # create category name as key and self.__game_links() as value.
+            game_links[category] = self.game_links() # create category name as key and self.game_links() as value.
         return game_links
     
     
@@ -269,7 +269,7 @@ class BGG_Scraper(Webdriver):
 
         If the user did enter a category, the function makes a call to self.select_category to goto the specific category page. The function
         then creates the dictionary game_links, adding a single 'key : value' pair that has the selected category name as key and a list of
-        links to the the 'top 6' games for that category, obtained by calling to self.__game_links.
+        links to the the 'top 6' games for that category, obtained by calling to self.game_links.
         The game_links dictionary is then passed to self.iterate_games to scrape info for each game and add that info to self.game_dict.
         """
         
@@ -282,7 +282,7 @@ class BGG_Scraper(Webdriver):
         else:
             self.select_category(self.category) # goto category page entered by user
             game_links = {}
-            game_links[self.category] = self.__game_links() # add list of game links as value to game_links dictionary
+            game_links[self.category] = self.game_links() # add list of game links as value to game_links dictionary
             self.iterate_games(game_links) # scrape info for each game
             self.driver.quit()
 
