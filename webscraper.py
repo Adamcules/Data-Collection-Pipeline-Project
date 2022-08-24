@@ -46,7 +46,7 @@ class Webdriver:
             pass
 
 
-class BGG_Scraper(Webdriver):
+class BGGScraper(Webdriver):
     """ 
     This class is a Child of the 'Webdriver' class. It uses the webdriver to scrape game info from the website 'boardgamegeek.com' (BGG).
 
@@ -62,7 +62,7 @@ class BGG_Scraper(Webdriver):
     def __init__(self, url: str = "https://boardgamegeek.com/browse/boardgamecategory"):
         super().__init__(url)
         self.game_dict = {} 
-        self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).capitalize() # User input determines whether all categories will be scraped or one specific category.
+        self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).title() # User input determines whether all categories will be scraped or one specific category.
     
     def select_category(self, category: str):
         """
@@ -257,6 +257,7 @@ class BGG_Scraper(Webdriver):
                     info_dict['Category'].append(category)
                     self.game_dict[bgg_id] = info_dict # add info_dict as value to self.game_dict, using bgg_id as key.
                 time.sleep(1)
+        return self.game_dict
 
     def run(self):
         """
@@ -274,7 +275,7 @@ class BGG_Scraper(Webdriver):
         """
         
         self.accept_cookies('//*[@id="c-p-bn"]') # click 'Accept Cookies' button
-        if self.category == "": # check whether user enter a specific category or no
+        if self.category == "": # check whether user enters a specific category or no
             category_links = self.category_links() # obtain links to categories
             game_links = self.iterate_categories(category_links) # obtain links to games
             self.iterate_games(game_links) # scrape info for each game
@@ -287,7 +288,7 @@ class BGG_Scraper(Webdriver):
             self.driver.quit()
 
 
-class Local_Save:
+class LocalSave:
 
     """
     This class contains methods to save information passed to it as a python dictionary within local folders.
