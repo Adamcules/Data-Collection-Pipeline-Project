@@ -41,7 +41,7 @@ Webscraper class initialises general Chrome webdriver. BGGScraper contains speci
 
 Refactored several methods within the BGGScraper class so they no longer call to another function within the class and generally return a value instead. Previously the class would run when initiated and the logic flowed by functions calling to the next function in the flow. Instead, the 'run()' function was added which now handles the logic flow and is called from outside the class:
 
-
+![run() function](https://user-images.githubusercontent.com/106440366/187181663-79af97ad-453b-44ce-89ea-d835db8c387c.JPG)
 
 ## Milestone 5
 Added docstrings to all functions.
