@@ -22,14 +22,12 @@ class WebscraperTestCase(unittest.TestCase):
         page_category = self.test_scraper.driver.find_element(By.XPATH, '//*[@class="game-header-title-info"]/h1/a').text # get category name from page visited
         self.assertMultiLineEqual(self.test_scraper.category, page_category) # compare user entered category name with category name on page and test they are the same 
     
-    #@unittest.skip
+    @unittest.skip
     def test_iterate_categories(self):
         """
         Tests that iterate_categories method returns a dictionary the same length as the number of categories on the categories page
         """
         category_links = self.test_scraper.category_links() # get category links from category page
-        #game_links = self.test_scraper.iterate_categories(category_links) 
-        #link_count = len(game_links)
         self.assertEqual(len(category_links), len(self.test_scraper.iterate_categories(category_links))) # test length of list returned by category_links() is equal to length of dictionary returned by iterate_categories()
 
 
