@@ -36,7 +36,17 @@ Extracted BGG_ID value in iterate_game method by using .split() function on the 
 
 ![Check bgg_id in game_dict](https://user-images.githubusercontent.com/106440366/183736925-9ca15af0-944c-4bb4-81b9-8208c3806e52.JPG)
 
-Added docstrings to all functions
+Restructured code to containerise code within 3 classes: Webscraper, BGGScraper and LocalSave.
+Webscraper class initialises general Chrome webdriver. BGGScraper contains specific methods for scraping the BGG website and LocalSave contains methods for saving scraped info and image files in local folders. 
+
+Refactored several methods within the BGGScraper class so they no longer call to another function within the class and generally return a value instead. Previously the class would run when initiated and the logic flowed by functions calling to the next function in the flow. Instead, the 'run()' function was added which now handles the logic flow and is called from outside the class:
+
+
+
+## Milestone 5
+Added docstrings to all functions.
+
+Created test_webscraper.py file which contains unittests for 3 of the public functions within the BGGScraper class: select_category(), iterate_categories() and iterate_games().
 
 
 Example text below
