@@ -261,7 +261,7 @@ class BGGScraper(Webdriver):
 
     def run(self):
         """
-        This function contains the logic for running an instance of BBG_Scraper class.
+        This function contains the logic for running an instance of BBGScraper class.
 
         The function first makes a call to self.accept_cookes. Then if the user has not entered a specific category it makes a call to
         self.category_links to get a list of links to all categories (category_links). This is then passed to self.iterate_categories
@@ -361,7 +361,7 @@ class LocalSave:
 
 
 if __name__ == "__main__":
-    bgg_scrape = BGG_Scraper()
+    bgg_scrape = BGGScraper()
     bgg_scrape.run()
-    data_save = Local_Save(bgg_scrape.game_dict)
+    data_save = LocalSave(bgg_scrape.game_dict)
     data_save.run()
