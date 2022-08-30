@@ -7,7 +7,6 @@ This module contains classes for initialising a webdriver (Class: Webdriver), a 
 import boto3 
 import json 
 import os
-from PIL import Image
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -410,7 +409,16 @@ class S3ExporterDirect():
 if __name__ == "__main__":
     bgg_scrape = BGGScraper()
     bgg_scrape.run()
-    data_save = LocalSave(bgg_scrape.game_dict)
-    data_save.run()
-    data_export = S3ExporterLocal('./raw_data','data-collection-project-bucket')
-    data_export.export_to_bucket()
+    save_option = input("Press 'L' to store data locally, 'C' to upload data to cloud or 'B' to do both: ").capitalize()
+    if save_option == 'L':
+        data_save = LocalSave(bgg_scrape.game_dict)
+        data_save.run()
+    elif save_option == 'C':
+        direct_data_export = S3ExporterDirect('data-collection-project-bucket', bgg_scrape.game_dict)
+        direct_data_export.export_json()
+        direct_data_export.export_image()
+    elif save_option == 'B':
+        data_save = LocalSave(bgg_scrape.game_dict)
+        data_save.run()
+        local_data_export = S3ExporterLocal('./raw_data','data-collection-project-bucket')
+        local_data_export.export_to_bucket()
