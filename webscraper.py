@@ -359,9 +359,21 @@ class LocalSave:
         self.save_game_images()
 
 
+def export_to_bucket(path):
+    import boto3 
+    s3_client = boto3.client('s3')
+    for root,dirs,files in os.walk(path):
+        for file in files:
+            parse_root = root.split('\\')[1]
+            file_name = parse_root + ' - ' + file 
+            s3_client.upload_file(os.path.join(root,file),'data-collection-project-bucket',file_name)
+
+
+
 
 if __name__ == "__main__":
     bgg_scrape = BGGScraper()
     bgg_scrape.run()
     data_save = LocalSave(bgg_scrape.game_dict)
     data_save.run()
+    export_to_bucket('./raw_data')
