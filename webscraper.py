@@ -1,6 +1,7 @@
 """
-This module contains classes for initialising a webdriver, a webscraper to scrape the website 'BoardGameGeek' (BGG) and
-for saving the scraped data in local files.
+This module contains classes for initialising a webdriver (Class: Webdriver), a webscraper (BGGScraper) to scrape the website 'BoardGameGeek'
+(BGG) (class: BGGScraper), for saving scraped data in local files (class: LocalSave) and for exporting local files to a cloud-based S3 bucket
+(class: S3Exporter).
 """
 
 import json 
@@ -359,14 +360,25 @@ class LocalSave:
         self.save_game_images()
 
 
-def export_to_bucket(path):
-    import boto3 
-    s3_client = boto3.client('s3')
-    for root,dirs,files in os.walk(path):
-        for file in files:
-            parse_root = root.split('\\')[1]
-            file_name = parse_root + ' - ' + file 
-            s3_client.upload_file(os.path.join(root,file),'data-collection-project-bucket',file_name)
+class S3Exporter:
+    """
+    This class contains a method to export local files to an S3 Bucket
+    """
+    def __init__(self, local_path: str, bucket_name: str) -> None:
+        self.local_path = local_path # defines local folder containing files to export
+        self.bucket_name = bucket_name # name of target S3 bucket to export to
+        import boto3 
+        self.s3_client = boto3.client('s3') # initialise S3 boto3 client
+
+    def export_to_bucket(self):
+        """
+        This function iterates through a local folder and uploads the files to an S3 bucket
+        """
+        for root,dirs,files in os.walk(self.local_path): # target file names are concatenated from local directory path and file name
+            for file in files:
+                parse_root = root.split('\\')[1] # gets first part of target file name from local directory path 
+                file_name = parse_root + ' - ' + file # concatenate first part of target file name with local file name to get full target file name 
+                self.s3_client.upload_file(os.path.join(root,file),self.bucket_name,file_name) # upload files to S3 bucket
 
 
 
@@ -376,4 +388,5 @@ if __name__ == "__main__":
     bgg_scrape.run()
     data_save = LocalSave(bgg_scrape.game_dict)
     data_save.run()
-    export_to_bucket('./raw_data')
+    data_export = S3Exporter('./raw_data','data-collection-project-bucket')
+    data_export.export_to_bucket()
