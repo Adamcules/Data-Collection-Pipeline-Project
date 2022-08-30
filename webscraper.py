@@ -4,8 +4,11 @@ This module contains classes for initialising a webdriver (Class: Webdriver), a 
 (class: S3Exporter).
 """
 
+import boto3 
 import json 
 import os
+from PIL import Image
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -14,7 +17,6 @@ from selenium.common.exceptions import TimeoutException
 import time
 import urllib.request
 import uuid
-
 
 
 class Webdriver:
@@ -360,33 +362,55 @@ class LocalSave:
         self.save_game_images()
 
 
-class S3Exporter:
+class S3ExporterLocal:
     """
     This class contains a method to export local files to an S3 Bucket
     """
     def __init__(self, local_path: str, bucket_name: str) -> None:
         self.local_path = local_path # defines local folder containing files to export
         self.bucket_name = bucket_name # name of target S3 bucket to export to
-        import boto3 
         self.s3_client = boto3.client('s3') # initialise S3 boto3 client
 
     def export_to_bucket(self):
         """
         This function iterates through a local folder and uploads the files to an S3 bucket
         """
-        for root,dirs,files in os.walk(self.local_path): # target file names are concatenated from local directory path and file name
-            for file in files:
-                parse_root = root.split('\\')[1] # gets first part of target file name from local directory path 
-                file_name = parse_root + ' - ' + file # concatenate first part of target file name with local file name to get full target file name 
-                self.s3_client.upload_file(os.path.join(root,file),self.bucket_name,file_name) # upload files to S3 bucket
+        for root,dirs,files in os.walk(self.local_path): # iterate through folders and files in local directory
+            for file in files: # iterate through source files
+                parse_root = root.split('\\')[1] # get parent folder name of file
+                if parse_root == 'images': # checks if file is in local 'images' folder
+                    file_name = file.removesuffix('.jpg') + ' - ' + 'image.jpg' # set upload filename
+                    self.s3_client.upload_file(os.path.join(root, file), self.bucket_name, file_name) # upload file to S3 bucket
+                else:
+                    file_name = parse_root + ' - ' + file # set upload filename
+                    self.s3_client.upload_file(os.path.join(root, file), self.bucket_name, file_name) # upload file to S3 bucket
 
 
-
+class S3ExporterDirect():
+    def __init__(self, bucket_name: str, game_dict: dict) -> None:
+        self.bucket_name = bucket_name
+        self.game_dict = game_dict
+        self.s3_client = boto3.client('s3') # initialise S3 boto3 client
+    
+    def export_json(self):
+        for game in self.game_dict:
+            file_name = game + ' - ' + 'data.json'
+            json_object = self.game_dict[game]
+            self.s3_client.put_object(Body=json.dumps(json_object), Bucket=self.bucket_name, Key=file_name)
+    
+    def export_image(self):
+        for game in self.game_dict:
+            file_name = game + ' - ' + 'image.jpg'
+            url = self.game_dict[game]['Image']
+            response = requests.get(url, stream=True)
+            image = response.content
+            self.s3_client.put_object(Body=image, Bucket=self.bucket_name, Key=file_name)
+        
 
 if __name__ == "__main__":
     bgg_scrape = BGGScraper()
     bgg_scrape.run()
     data_save = LocalSave(bgg_scrape.game_dict)
     data_save.run()
-    data_export = S3Exporter('./raw_data','data-collection-project-bucket')
+    data_export = S3ExporterLocal('./raw_data','data-collection-project-bucket')
     data_export.export_to_bucket()
