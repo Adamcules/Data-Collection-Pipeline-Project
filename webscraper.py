@@ -1,20 +1,15 @@
 """
-This module contains classes for initialising a webdriver (Class: Webdriver), a webscraper (BGGScraper) to scrape the website 'BoardGameGeek'
-(BGG) (class: BGGScraper), for saving scraped data in local files (class: LocalSave) and for exporting local files to a cloud-based S3 bucket
-(class: S3Exporter).
+This module contains two classes: Webdriver and BGGScraper.
+
+Webdriver initialises a Selenium Chrome webdriver and BGGScraper is a child class that performs a scrape of the website boardgamegeek.com (BGG)
 """
 
-import boto3 
-import json 
-import os
-import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
-import urllib.request
 import uuid
 
 
@@ -288,137 +283,3 @@ class BGGScraper(Webdriver):
             game_links[self.category] = self.game_links() # add list of game links as value to game_links dictionary
             self.iterate_games(game_links) # scrape info for each game
             self.driver.quit()
-
-
-class LocalSave:
-
-    """
-    This class contains methods to save information passed to it as a python dictionary within local folders.
-
-    A user can enter a directory to store all the files or use the default directory.
-    """
-    
-    def __init__(self, game_dict: dict, save_folder: str = input('Please enter directory for local save folder. Leave blank for default: ')):
-        self.game_dict = game_dict
-        if save_folder == "":
-            self.save_folder = '/Users/adam-/OneDrive/Desktop/AI_Core/Data-Collection-Pipeline-Project/raw_data' # default directory used if user does not enter alternative
-        else:
-            self.save_folder = save_folder 
-
-    def save_dict_records(self):
-        """
-        This function saves dictionary values as JSON files within a local directory folder. 
-        
-        The function attempts to create a file called 'raw_data' (unless the user has specified another directory). 
-        The function then iterates through each item in the dictionary passed to it, checks whether a folder has already been created for that
-        item and, if not, creates a folder for it within the parent folder, naming the folder after the dictionary key name.
-        It then writes a JSON file within that folder called 'data.json' which contains the value information for that dictionary item.
-        """
-        if not os.path.exists(self.save_folder): # check whether directory already exists
-            os.mkdir(self.save_folder) # create new folder
-        else:
-            print ("local save directory already exists.")
-        for game in self.game_dict: # iterate through dictionary passed to instance of class
-            directory = os.path.join(self.save_folder, game) # create directory name for dictionary item
-            try:
-                os.mkdir(directory) # check whether folder already exists for dictionary item and create if it doesn't
-            except:
-                print (f"game directory {game} already exists.")
-            data_file = os.path.join(directory, 'data.json') # create file name for saved data 
-            with open(data_file, 'w') as fp: # write json file containing value info for dictionary item
-                json.dump(self.game_dict[game], fp)
-
-
-    def save_game_images(self): 
-        """
-        This function creates a file called 'images' within the parent folder created by self.save_dict_records and saves image files found within dictionary passed to instance of class  
-        
-        NB: For this function to work, the dictionary passed to the class must consist of nested dictionaries containing the key 'Images'.
-
-        The function first checks whether a folder called 'images' has been created within the parent folder. If not, it creates this folder.
-        The function then iterates through the dictionary passed to the class instance. For each item, it obtains the url to the image file
-        stored under the nested dictionary key 'Images' and saves the image within the 'images' folder using urllib.request library and
-        .urlretrieve function. The file is named after the key name.
-        """
-        images = os.path.join(self.save_folder, 'images') # create 'images' folder name
-        if not os.path.exists(images): # check if folder already exists
-            os.mkdir(images) # create folder
-        else:
-            print ('images directory already exists.')
-        for game in self.game_dict:
-            name = f"{game}.jpg" # create file name for image 
-            url = self.game_dict[game]['Image'] # get url for image
-            image_file = os.path.join(images, name) # create directory for image file
-            urllib.request.urlretrieve(url, image_file) # save image file in 'images' folder
-        
-    def run(self):
-        """
-        This function contains the logic for running an instance of Local_Save class.
-
-        The function calls to self.save_dict_recrods and self.save_game_images in turn.
-        """
-        self.save_dict_records()
-        self.save_game_images()
-
-
-class S3ExporterLocal:
-    """
-    This class contains a method to export local files to an S3 Bucket
-    """
-    def __init__(self, local_path: str, bucket_name: str) -> None:
-        self.local_path = local_path # defines local folder containing files to export
-        self.bucket_name = bucket_name # name of target S3 bucket to export to
-        self.s3_client = boto3.client('s3') # initialise S3 boto3 client
-
-    def export_to_bucket(self):
-        """
-        This function iterates through a local folder and uploads the files to an S3 bucket
-        """
-        for root,dirs,files in os.walk(self.local_path): # iterate through folders and files in local directory
-            for file in files: # iterate through source files
-                parse_root = root.split('\\')[1] # get parent folder name of file
-                if parse_root == 'images': # checks if file is in local 'images' folder
-                    file_name = file.removesuffix('.jpg') + ' - ' + 'image.jpg' # set upload filename
-                    self.s3_client.upload_file(os.path.join(root, file), self.bucket_name, file_name) # upload file to S3 bucket
-                else:
-                    file_name = parse_root + ' - ' + file # set upload filename
-                    self.s3_client.upload_file(os.path.join(root, file), self.bucket_name, file_name) # upload file to S3 bucket
-
-
-class S3ExporterDirect():
-    def __init__(self, bucket_name: str, game_dict: dict) -> None:
-        self.bucket_name = bucket_name
-        self.game_dict = game_dict
-        self.s3_client = boto3.client('s3') # initialise S3 boto3 client
-    
-    def export_json(self):
-        for game in self.game_dict:
-            file_name = game + ' - ' + 'data.json'
-            json_object = self.game_dict[game]
-            self.s3_client.put_object(Body=json.dumps(json_object), Bucket=self.bucket_name, Key=file_name)
-    
-    def export_image(self):
-        for game in self.game_dict:
-            file_name = game + ' - ' + 'image.jpg'
-            url = self.game_dict[game]['Image']
-            response = requests.get(url, stream=True)
-            image = response.content
-            self.s3_client.put_object(Body=image, Bucket=self.bucket_name, Key=file_name)
-        
-
-if __name__ == "__main__":
-    bgg_scrape = BGGScraper()
-    bgg_scrape.run()
-    save_option = input("Press 'L' to store data locally, 'C' to upload data to cloud or 'B' to do both: ").capitalize()
-    if save_option == 'L':
-        data_save = LocalSave(bgg_scrape.game_dict)
-        data_save.run()
-    elif save_option == 'C':
-        direct_data_export = S3ExporterDirect('data-collection-project-bucket', bgg_scrape.game_dict)
-        direct_data_export.export_json()
-        direct_data_export.export_image()
-    elif save_option == 'B':
-        data_save = LocalSave(bgg_scrape.game_dict)
-        data_save.run()
-        local_data_export = S3ExporterLocal('./raw_data','data-collection-project-bucket')
-        local_data_export.export_to_bucket()
