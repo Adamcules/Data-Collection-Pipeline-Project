@@ -48,7 +48,7 @@ class RDSExport():
         """
         This function exports the dataframe as an sql table to RDS
         """
-        self.data_frame.to_sql('game_dataset', self.engine, if_exists='replace')
+        self.data_frame.to_sql('game_dataset', self.engine, if_exists='append')
 
 
 def run(game_dict):
