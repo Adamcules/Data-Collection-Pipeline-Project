@@ -30,14 +30,14 @@ class Webdriver:
         self.driver.get(url)
     
     
-    def accept_cookies(self, xpath: str): 
+    def accept_cookies(self, button): 
         """
         This function clicks an 'Accept Cookies' button if it appears and passes if none appears after 4 seconds.
         """
         time.sleep(1)
         delay = 4
         try:
-            cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, xpath))) # wait up to 4 seconds for 'Accept Cookies' button to appear. XPATH to button passed to function as xpath) 
+            cookies_button = WebDriverWait(self.driver, delay).until(EC.presence_of_element_located((By.XPATH, button))) # wait up to 4 seconds for 'Accept Cookies' button to appear. XPATH to button passed to function as button) 
             cookies_button.click()
         except TimeoutException:
             pass
@@ -256,7 +256,7 @@ class BGGScraper(Webdriver):
                 time.sleep(1)
         return self.game_dict
 
-    def run(self):
+    def run(self, button):
         """
         This function contains the logic for running an instance of BBGScraper class.
 
@@ -271,7 +271,7 @@ class BGGScraper(Webdriver):
         The game_links dictionary is then passed to self.iterate_games to scrape info for each game and add that info to self.game_dict.
         """
         
-        self.accept_cookies('//*[@id="c-p-bn"]') # click 'Accept Cookies' button
+        self.accept_cookies(button) # click 'Accept Cookies' button
         if self.category == "": # check whether user enters a specific category or no
             category_links = self.category_links() # obtain links to categories
             game_links = self.iterate_categories(category_links) # obtain links to games
