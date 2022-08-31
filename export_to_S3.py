@@ -57,7 +57,7 @@ class S3ExporterDirect():
         This function uploads dictionary info as a JSON file
         """
         for game in self.game_dict: # iterate through dictionary
-            file_name = game + ' - ' + 'data.json' # set target file name
+            file_name = game + ' - ' + self.game_dict[game]['Name'] + ' - ' + 'data.json' # set target file name
             json_object = self.game_dict[game] # json data to upload: value of dictionary key 
             self.s3_client.put_object(Body=json.dumps(json_object), Bucket=self.bucket_name, Key=file_name) # upload file to S3 bucket
     
@@ -68,7 +68,7 @@ class S3ExporterDirect():
         NB: function will only work if dictionary has nested dictionary with key named 'Image'
         """
         for game in self.game_dict: # iterate through dictionary
-            file_name = game + ' - ' + 'image.jpg' # set target file name
+            file_name = game + ' - ' + self.game_dict[game]['Name'] + ' - ' + 'image.jpg' # set target file name
             url = self.game_dict[game]['Image'] # get image url
             response = requests.get(url, stream=True) # get image data
             image = response.content # get response content (returns content as byte array which is required format for 'Body' argument in .put_object function below)
