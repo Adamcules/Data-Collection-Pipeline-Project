@@ -39,7 +39,7 @@ class LocalSave:
         else:
             print ("local save directory already exists.")
         for game in self.game_dict: # iterate through dictionary passed to instance of class
-            strip_special_characters = ''.join(filter(str.isalnum, self.game_dict[game]['Name']))
+            strip_special_characters = ''.join(filter(str.isalnum, self.game_dict[game]['Name'])) # remove special characters from game name to guarantee valid file name
             folder_name = game + ' - ' + strip_special_characters
             directory = os.path.join(self.save_folder, folder_name) # create directory name for dictionary item
             try:
@@ -68,7 +68,7 @@ class LocalSave:
         else:
             print ('images directory already exists.')
         for game in self.game_dict:
-            strip_special_characters = ''.join(filter(str.isalnum, self.game_dict[game]['Name']))
+            strip_special_characters = ''.join(filter(str.isalnum, self.game_dict[game]['Name'])) # remove special characters from game name to guarantee valid file name
             file_name = game + ' - ' + strip_special_characters + '.jpg'
             url = self.game_dict[game]['Image'] # get url for image
             image_file = os.path.join(images, file_name) # create directory for image file
