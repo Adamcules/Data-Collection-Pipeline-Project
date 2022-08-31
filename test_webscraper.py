@@ -5,7 +5,6 @@ This module contains a unittest class to test the correct functionality of 3 pub
 
 import unittest
 from webscraper import BGGScraper
-import time
 from selenium.webdriver.common.by import By
 
 class WebscraperTestCase(unittest.TestCase):
