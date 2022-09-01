@@ -26,7 +26,7 @@ class DataFrame():
 
 class RDSExport():
     """
-    This class takes a dataframe and exports it to an AWS RDS database.
+    This class takes a dataframe and exports it to an AWS RDS database, concatenating it to an existing table if found.
 
     Attributes:
         engine: sqlalchemy engine to connect to RDS
@@ -44,22 +44,31 @@ class RDSExport():
         self.engine.connect() # connect to RDS
         self.data_frame = data_frame # dataframe passed to class
     
-    def export_to_rds(self):
+    def clean_table(self):
+        """
+        This function gets the existing table from RDS, concatenates the new dataframe to it and removes duplicates
+        """
+        get_table = pd.read_sql_table('game_dataset', self.engine) # get existing table from RDS
+        removed_index = get_table.set_index('index') # remove generic index column from RDS table as it does not exist in new dataframe to be concatenated
+        appended_table = pd.concat([removed_index, self.data_frame]) # concatenate new dataframe to old table 
+        appended_table.drop_duplicates(subset='BGG_ID', keep='last', inplace=True) # remove duplicates found in newly concatenated table based on their BGG_ID
+        return appended_table
+    
+    def export_to_rds(self, appended_table):
         """
         This function exports the dataframe as an sql table to RDS
         """
-        self.data_frame.to_sql('game_dataset', self.engine, if_exists='append')
+        appended_table.to_sql('game_dataset', self.engine, if_exists='replace')
 
 
-def run(game_dict):
+def run_rds_export(game_dict):
     """
     This function contains the run logic for the module
-    """
+    """    
     df = DataFrame(game_dict)
     data_frame = df.create_data_frame()
     export = RDSExport(data_frame)
-    export.export_to_rds()
-
+    export.export_to_rds(export.clean_table())
 
 
 
