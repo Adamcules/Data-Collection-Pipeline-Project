@@ -22,5 +22,13 @@ if __name__ == "__main__":
         data_save.run()
         local_data_export = S3ExporterLocal('./raw_data','data-collection-project-bucket')
         local_data_export.export_to_bucket()
+    else:
+        print ('Data not saved')
+        pass
+        #TODO: give user option to renter save choice
     
-    export_to_rds.run_rds_export(bgg_scrape.game_dict)
+    if input("Enter 'Y' to upload data to RDS table: ").capitalize() == 'Y':
+        export_to_rds.run_rds_export(bgg_scrape.game_dict)
+    else:
+        print('Data not uploaded to RDS')
+        pass
