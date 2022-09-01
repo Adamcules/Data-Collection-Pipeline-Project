@@ -23,4 +23,4 @@ if __name__ == "__main__":
         local_data_export = S3ExporterLocal('./raw_data','data-collection-project-bucket')
         local_data_export.export_to_bucket()
     
-    export_to_rds.run(bgg_scrape.game_dict)
+    export_to_rds.run_rds_export(bgg_scrape.game_dict)

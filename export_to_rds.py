@@ -48,10 +48,13 @@ class RDSExport():
         """
         This function gets the existing table from RDS, concatenates the new dataframe to it and removes duplicates
         """
-        get_table = pd.read_sql_table('game_dataset', self.engine) # get existing table from RDS
-        removed_index = get_table.set_index('index') # remove generic index column from RDS table as it does not exist in new dataframe to be concatenated
-        appended_table = pd.concat([removed_index, self.data_frame]) # concatenate new dataframe to old table 
-        appended_table.drop_duplicates(subset='BGG_ID', keep='last', inplace=True) # remove duplicates found in newly concatenated table based on their BGG_ID
+        try: # check if table already exists
+            get_table = pd.read_sql_table('game_dataset', self.engine) # get existing table from RDS
+            removed_index = get_table.set_index('index') # remove generic index column from RDS table as it does not exist in new dataframe to be concatenated
+            appended_table = pd.concat([removed_index, self.data_frame]) # concatenate new dataframe to old table 
+            appended_table.drop_duplicates(subset='BGG_ID', keep='last', inplace=True) # remove duplicates found in newly concatenated table based on their BGG_ID
+        except: # if table does not exist, simply make appended_table equal to new dataframe i.e. self.data_frame
+            appended_table = self.data_frame
         return appended_table
     
     def export_to_rds(self, appended_table):
