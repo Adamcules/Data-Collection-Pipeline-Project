@@ -5,6 +5,7 @@ Webdriver initialises a Selenium Chrome webdriver and BGGScraper is a child clas
 """
 
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -26,7 +27,9 @@ class Webdriver:
         """
         See help(Webdriver) for accurate signature.
         """
-        self.driver = webdriver.Chrome()
+        options = Options()
+        options.headless = True
+        self.driver = webdriver.Chrome(chrome_options=options)
         self.driver.get(url)
     
     
