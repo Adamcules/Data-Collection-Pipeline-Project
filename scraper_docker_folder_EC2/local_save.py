@@ -20,9 +20,11 @@ class LocalSave:
     
     def __init__(self, game_dict: dict):
         self.game_dict = game_dict
-        self.save_folder = str(input('Please enter directory for local save folder. Leave blank for default: '))
-        if self.save_folder == "":
-            self.save_folder = 'raw_data' # default directory used if user does not enter alternative 
+        # following 3 lines to be used if user input desired for save directory:
+        # self.save_folder = str(input('Please enter directory for local save folder. Leave blank for default: '))
+        # if self.save_folder == "":
+        #     self.save_folder = 'raw_data' # default directory used if user does not enter alternative 
+        self.save_folder = 'raw_data' # default directory used if user does not enter alternative
 
     
     def save_dict_records(self):
