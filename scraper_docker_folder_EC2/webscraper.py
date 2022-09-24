@@ -64,8 +64,9 @@ class BGGScraper(Webdriver):
     def __init__(self, url: str = "https://boardgamegeek.com/browse/boardgamecategory"):
         super().__init__(url)
         self.game_dict = {} 
-        self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).title() # User input determines whether all categories will be scraped or one specific category.
-    
+        #self.category = str(input("Please enter board game category. Leave blank to scrape all categories: ")).title() # User input determines whether all categories will be scraped or one specific category.
+        self.category = "Abstract Strategy"
+
     def select_category(self, category: str):
         """
         This function is called when the user enters a specific category.
