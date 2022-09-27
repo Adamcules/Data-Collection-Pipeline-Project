@@ -86,6 +86,9 @@ To prevent duplicate records being generated in the RDS database, the RDSExport 
 
 This new dataframe cleaned of duplicates is then uploaded back to the RDS database as an SQL table.
 
+## Milestone 8
+Remember #!/bin/bash in cron_docker_run.sh file (found under home directory of EC2 instance). Only way to get cron to pass env variables to docker container
+
 
 
 Example text below
