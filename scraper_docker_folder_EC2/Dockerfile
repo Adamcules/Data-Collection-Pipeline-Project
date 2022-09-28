@@ -3,10 +3,11 @@ FROM python:3.10
 COPY . .
 
 RUN apt-get update -y 
-RUN apt-get -y install libpq-dev gcc
-RUN apt-get -y install wget
 RUN apt-get -y install gnupg
+RUN apt-get -y install libpq-dev gcc
 RUN apt-get -y install vim
+RUN apt-get -y install wget
+
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \ 
     && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list

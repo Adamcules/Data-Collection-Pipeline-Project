@@ -21,9 +21,9 @@ class S3ExporterLocal:
     def __init__(self, local_path: str, bucket_name: str) -> None:
         self.local_path = local_path # defines local folder containing files to export
         self.bucket_name = bucket_name # name of target S3 bucket to export to
-        access_key = os.environ.get('aws_access_key_id')
+        key_id = os.environ.get('aws_access_key_id')
         secret_access_key = os.environ.get('aws_secret_access_key')
-        self.s3_client = boto3.client('s3', aws_access_key_id = access_key, aws_secret_access_key = secret_access_key) # initialise S3 boto3 client
+        self.s3_client = boto3.client('s3', aws_access_key_id = key_id, aws_secret_access_key = secret_access_key) # initialise S3 boto3 client
 
     def export_to_bucket(self):
         """
@@ -54,9 +54,9 @@ class S3ExporterDirect():
     def __init__(self, bucket_name: str, game_dict: dict) -> None:
         self.bucket_name = bucket_name # name of target S3 bucket to export to
         self.game_dict = game_dict # passed dictionary
-        access_key = os.environ.get('aws_access_key_id')
+        key_id = os.environ.get('aws_access_key_id')
         secret_access_key = os.environ.get('aws_secret_access_key')        
-        self.s3_client = boto3.client('s3', aws_access_key_id = access_key, aws_secret_access_key = secret_access_key) # initialise S3 boto3 client
+        self.s3_client = boto3.client('s3', aws_access_key_id = key_id, aws_secret_access_key = secret_access_key) # initialise S3 boto3 client
     
     def export_json(self):
         """
