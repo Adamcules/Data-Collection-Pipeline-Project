@@ -89,9 +89,20 @@ This new dataframe cleaned of duplicates is then uploaded back to the RDS databa
 ## Milestone 8
 !!Remember #!/bin/bash in cron_docker_run.sh file (found under home directory of EC2 instance). Only way to get cron to pass env variables to docker container!!
 
-Added the import of 'Options' from selenium.webdriver.chrome.options in order to set options necessary to run the selenium webdriver within a Docker container. The options set were 'headless', 'no-sandbox' and 'disable-dev-shm-usage':
+Added the import of 'Options' from selenium.webdriver.chrome.options to webscraper.py in order to set options necessary for the Webdriver class to run the selenium webdriver within a Docker container. The options set were 'headless', 'no-sandbox' and 'disable-dev-shm-usage':
 
 ![image](https://user-images.githubusercontent.com/106440366/192865717-544d7401-ed18-4f63-bc43-f3e50f741fc3.png)
+
+Created a Dockerfile using the base image python:3.10. This file contains commands to install all the necessary dependencies needed to successfully run the webscraper within a Docker container, including a number of Python packages which are installed from the 'requirements.txt' file using the pip install -r option.
+
+Dockerfile:
+![image](https://user-images.githubusercontent.com/106440366/192869118-46f358b0-797c-475c-b4bc-6b24a5b783a8.png)
+
+Requirements file:
+![image](https://user-images.githubusercontent.com/106440366/192869294-fc1633ba-76d1-4e8c-804a-bf61cc2df600.png)
+
+
+
 
 
 
