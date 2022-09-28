@@ -105,7 +105,39 @@ Initially built Docker image using docker build command on local machine and suc
 
 The Docker image was then pushed to Docker Hub.
 
-A new EC2 instance was created on AWS and the Docker image pulled from Docker Hub onto this instance.
+A new EC2 instance was created on AWS and the Docker image pulled from Docker Hub onto this instance. 
+
+On the local machine, the boto3 client retrieves the required aws_access_key_id and aws_secret_access_key it needs to access the S3 bucket from the .aws folder found in the home directory. This is not available within the EC2 instance and therefore when running the Docker image from the EC2 instance, the Docker container was not able to suuccessfully upload data to the S3 bucket.
+
+This was fixed by editing the .bash_profile file within the EC2 instance to set the ID and Key as environment variables. These are then passed as environment variables to the Docker container when it is run using the following command:
+
+docker run -e aws_access_key_id=$aws_access_key_id -e aws_secret_access_key=$aws_secret_access_key <image_name>
+
+The code within the file 'export_to_S3.py' was modified such that the boto3 client now found this ID and Key info from the relevant environment variables:
+
+![image](https://user-images.githubusercontent.com/106440366/192878454-8b30e349-5b04-4b93-bd12-b39f28939412.png)
+
+This enabled the webscraper to run successfully as a Docker container from the EC2 instance and was able to export data to both the S3 bucket and RDS database.
+
+The next step was to schedule the scraper to run periodically on the EC2 instance. 
+
+Firstly, the code in several of the modules was modified to remove any required user inputs, enabling the webscraper to run periodically without the need for a user to be present.
+
+Cron was used for the job scheduling. Initially this was attempted by scheduling Cron to run the Docker image every 5 minutes using the below Crontab schedule:
+
+![image](https://user-images.githubusercontent.com/106440366/192881026-163b1bf5-8809-4698-acc7-c5d4fbf66a19.png)
+
+However, this did not successfully pass the environment variables to the Docker container and thus export of data to the S3 bucket was not successful.
+
+To fix this, a .sh file was created (cron_docker_run.sh) containing a script for the above command defined as a bash command:
+
+![image](https://user-images.githubusercontent.com/106440366/192883470-e1c45cf6-b11b-427d-b2bf-569af3dac3fb.png)
+
+Crontab could then be used to run this script by setting BASH_ENV equal to the environment variables within the .bash_profile file:
+
+![image](https://user-images.githubusercontent.com/106440366/192884326-a47051f7-8558-47ec-9f31-e223bcc146f6.png)
+
+This successfully ran the Docker image every 5 minutes and the Docker containers successfully exported the relevant data to the S3 bucket and RDS database.
 
 
 
