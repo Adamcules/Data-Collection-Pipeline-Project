@@ -87,7 +87,12 @@ To prevent duplicate records being generated in the RDS database, the RDSExport 
 This new dataframe cleaned of duplicates is then uploaded back to the RDS database as an SQL table.
 
 ## Milestone 8
-Remember #!/bin/bash in cron_docker_run.sh file (found under home directory of EC2 instance). Only way to get cron to pass env variables to docker container
+!!Remember #!/bin/bash in cron_docker_run.sh file (found under home directory of EC2 instance). Only way to get cron to pass env variables to docker container!!
+
+Added the import of 'Options' from selenium.webdriver.chrome.options in order to set options necessary to run the selenium webdriver within a Docker container. The options set were 'headless', 'no-sandbox' and 'disable-dev-shm-usage':
+
+![image](https://user-images.githubusercontent.com/106440366/192865717-544d7401-ed18-4f63-bc43-f3e50f741fc3.png)
+
 
 
 
