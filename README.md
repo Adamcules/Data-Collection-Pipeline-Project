@@ -101,6 +101,12 @@ Dockerfile:<br />
 Requirements file:<br />
 ![image](https://user-images.githubusercontent.com/106440366/192869294-fc1633ba-76d1-4e8c-804a-bf61cc2df600.png)
 
+Initially built Docker image using docker build command on local machine and successfully ran webscraper within a Docker container.
+
+The Docker image was then pushed to Docker Hub.
+
+A new EC2 instance was created on AWS and the Docker image pulled from Docker Hub onto this instance.
+
 
 
 
