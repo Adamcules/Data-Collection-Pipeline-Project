@@ -63,13 +63,13 @@ Installed and imported SQLALchemy to establish connection to RDS database (creat
 Wrote script containing a class to generate a dataframe using Pandas from a passed dictionary. A second class then contains methods for exporting the dataframe as an SQL table to the RDS database.
 This script successfully enabled scraped data generated from the BGG webscraper to be uploaded to the RDS database.
 
-Split Python code into separate modules: 'main.py', 'webscraper.py', 'local_save.py', 'export_to_S3.py', 'export_to_rds.py' and 'test_webscraper.py'. /n
-'webscraper' module: contains classes/methods for initialising a webdriver and scraping the BGG website. /n
-'local_save' module: contains classes/methods for saving scraped data as .JSON and .JPG files to local folders. /n
-'export_to_S3' module: contains classes/methods for exporting scraped data as .JSON and .JPG files to S3 bucket. /n
-'export_to_rds' module: contains classes/methods for exporting scraped data to an RDS database. /n
-'main' module: imports the other above modules and provides the logic for running the webscraper and various data storage options, giving options to the user as to what they want to scrape and how they want to store the scraped data./n   
-/n
+Split Python code into separate modules: 'main.py', 'webscraper.py', 'local_save.py', 'export_to_S3.py', 'export_to_rds.py' and 'test_webscraper.py'. \
+'webscraper' module: contains classes/methods for initialising a webdriver and scraping the BGG website. \
+'local_save' module: contains classes/methods for saving scraped data as .JSON and .JPG files to local folders. \ 
+'export_to_S3' module: contains classes/methods for exporting scraped data as .JSON and .JPG files to S3 bucket. \
+'export_to_rds' module: contains classes/methods for exporting scraped data to an RDS database. \
+'main' module: imports the other above modules and provides the logic for running the webscraper and various data storage options, giving options to the user as to what they want to scrape and how they want to store the scraped data. \
+\
 'test_webscraper' module: contains unittest classes/methods for testing the correct functionality of the webscraper module.
 
 
