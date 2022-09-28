@@ -106,7 +106,7 @@ The Docker image was then pushed to Docker Hub.
 
 A new EC2 instance was created on AWS and the Docker image pulled from Docker Hub onto this instance. 
 
-On the local machine, the boto3 client retrieves the required aws_access_key_id and aws_secret_access_key it needs to access the S3 bucket from the .aws folder found in the home directory. This is not available within the EC2 instance and therefore when running the Docker image from the EC2 instance, the Docker container was not able to suuccessfully upload data to the S3 bucket.
+On the local machine, the boto3 client retrieves the required aws_access_key_id and aws_secret_access_key it needs to access the S3 bucket from the .aws folder found in the home directory. This is not available within the EC2 instance and therefore when running the Docker image from the EC2 instance, the Docker container was not able to successfully upload data to the S3 bucket.
 
 This was fixed by editing the .bash_profile file within the EC2 instance to set the ID and Key as environment variables. These are then passed as environment variables to the Docker container when it is run using the following command:
 
