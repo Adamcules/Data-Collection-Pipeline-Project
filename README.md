@@ -95,10 +95,10 @@ Added the import of 'Options' from selenium.webdriver.chrome.options to webscrap
 
 Created a Dockerfile using the base image python:3.10. This file contains commands to install all the necessary dependencies needed to successfully run the webscraper within a Docker container, including a number of Python packages which are installed from the 'requirements.txt' file using the pip install -r option.
 
-Dockerfile:
+Dockerfile:<br />
 ![image](https://user-images.githubusercontent.com/106440366/192869118-46f358b0-797c-475c-b4bc-6b24a5b783a8.png)
 
-Requirements file:
+Requirements file:<br />
 ![image](https://user-images.githubusercontent.com/106440366/192869294-fc1633ba-76d1-4e8c-804a-bf61cc2df600.png)
 
 
